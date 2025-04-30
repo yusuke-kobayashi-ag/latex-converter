@@ -1,0 +1,213 @@
+body {
+    font-family: 'Helvetica Neue', Arial, sans-serif;
+    line-height: 1.6;
+    margin: 0;
+    padding: 20px;
+    background-color: #f5f5f5;
+}
+
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
+    background-color: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+h1 {
+    text-align: center;
+    color: #333;
+    margin-bottom: 30px;
+}
+
+.input-section {
+    margin-bottom: 30px;
+}
+
+.form-group {
+    margin-bottom: 20px;
+}
+
+.preview {
+    margin: 30px 0;
+    padding: 20px;
+    background-color: #f9f9f9;
+    border-radius: 4px;
+}
+
+label {
+    display: block;
+    margin-bottom: 10px;
+    color: #555;
+    font-weight: bold;
+}
+
+textarea {
+    width: calc(100% - 20px);
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-family: monospace;
+    font-size: 14px;
+    resize: vertical;
+    box-sizing: border-box;
+}
+
+.button-group {
+    margin-top: 20px;
+}
+
+.command-buttons {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-bottom: 20px;
+    justify-content: center;
+}
+
+.command-buttons button {
+    flex: 0 1 calc(20% - 10px); /* デスクトップでは5つずつ */
+    min-width: 120px;
+    padding: 8px 16px;
+    background-color: #4CAF50;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+    transition: background-color 0.3s;
+}
+
+button:hover {
+    background-color: #45a049;
+}
+
+button:disabled {
+    background-color: #cccccc;
+    cursor: not-allowed;
+}
+
+.result {
+    margin-top: 30px;
+    text-align: center;
+}
+
+.result h2 {
+    color: #333;
+    margin-bottom: 15px;
+}
+
+.result img {
+    max-width: 100%;
+    height: auto;
+    margin: 20px 0;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+}
+
+#preview {
+    min-height: 100px;
+    padding: 10px;
+    background-color: white;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+}
+
+.download-buttons {
+    display: flex;
+    justify-content: center;
+    gap: 20px;
+    margin-top: 20px;
+}
+
+.download-button {
+    padding: 12px 24px;
+    margin: 10px;
+    font-size: 16px;
+    background-color: #4CAF50;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+.download-button:hover {
+    background-color: #45a049;
+}
+
+.download-button:active {
+    background-color: #1565C0;
+}
+
+.alert {
+    padding: 15px;
+    margin-bottom: 20px;
+    border-radius: 4px;
+}
+
+.alert-error {
+    background-color: #f8d7da;
+    color: #721c24;
+    border: 1px solid #f5c6cb;
+}
+
+.alert-success {
+    background-color: #d4edda;
+    color: #155724;
+    border: 1px solid #c3e6cb;
+}
+
+.loading {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    margin-top: 20px;
+}
+
+.spinner {
+    width: 40px;
+    height: 40px;
+    border: 4px solid #f3f3f3;
+    border-top: 4px solid #3498db;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* スマホサイズのメディアクエリ */
+@media (max-width: 768px) {
+    .command-buttons button {
+        flex: 0 1 calc(33.333% - 10px); /* 3つずつに変更 */
+        min-width: 0;
+        font-size: 12px;
+        padding: 10px 8px;
+    }
+
+    .container {
+        padding: 10px;
+    }
+
+    .button-group {
+        margin-top: 15px;
+    }
+
+    h3 {
+        font-size: 16px;
+        margin: 10px 0;
+    }
+}
+
+/* さらに小さい画面サイズ */
+@media (max-width: 480px) {
+    .command-buttons button {
+        flex: 0 1 calc(20% - 10px); /* 2つずつに変更 */
+        padding: 8px 6px;
+    }
+} 

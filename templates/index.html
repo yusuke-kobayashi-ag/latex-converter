@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LaTeX数式画像変換</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <script>
+        MathJax = {
+            tex: {
+                inlineMath: [['$', '$'], ['\\(', '\\)']],
+                displayMath: [['$$', '$$'], ['\\[', '\\]']],
+                processEscapes: true,
+                packages: ['base', 'ams', 'noerrors', 'noundefined']
+            },
+            svg: {
+                fontCache: 'global'
+            },
+            startup: {
+                typeset: true
+            }
+        };
+    </script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/3.2.2/es5/tex-svg.min.js"></script>
+</head>
+<body>
+    <div class="container">
+        <h1>LaTeX数式画像変換</h1>
+        
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }}">
+                        {{ message }}
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+        
+        <div class="input-section">
+            <div class="form-group">
+                <label for="latex">LaTeX数式を入力してください：</label>
+                <textarea name="latex" id="latex" rows="5" required oninput="updatePreview()" onkeydown="handleKeyDown(event)">{% if latex %}{{ latex }}{% endif %}</textarea>
+                <div class="button-group">
+                    <h3>基本式：</h3>
+                    <div class="command-buttons">
+                        <button type="button" onclick="insertCommand('^{}')">上付き文字</button>
+                        <button type="button" onclick="insertCommand('_{}')">下付き文字</button>
+                        <button type="button" onclick="insertCommand('\\frac{}{}')">分数</button>
+                        <button type="button" onclick="insertCommand('\\sqrt{}')">平方根</button>
+                        <button type="button" onclick="insertCommand('\\int_{a}^{b}')">積分</button>
+                        <button type="button" onclick="insertCommand('\\sum_{i=1}^{n}')">総和</button>
+                        <button type="button" onclick="insertCommand('\\prod_{i=1}^{n}')">総積</button>
+                        <button type="button" onclick="insertCommand('\\lim_{x \\to \\infty}')">極限</button>
+                        <button type="button" onclick="insertCommand('\\begin{pmatrix} \\end{pmatrix}')">行列</button>
+                      
+                    </div>
+                    <h3>特殊記号：</h3>
+                    <div class="command-buttons">
+                        <button type="button" onclick="insertCommand('\\alpha')">α</button>
+                        <button type="button" onclick="insertCommand('\\beta')">β</button>
+                        <button type="button" onclick="insertCommand('\\gamma')">γ</button>
+                        <button type="button" onclick="insertCommand('\\delta')">δ</button>
+                        <button type="button" onclick="insertCommand('\\theta')">θ</button>
+                        <button type="button" onclick="insertCommand('\\pi')">π</button>
+                        <button type="button" onclick="insertCommand('\\sigma')">σ</button>
+                        <button type="button" onclick="insertCommand('\\omega')">ω</button>
+                        <button type="button" onclick="insertCommand('\\infty')">∞</button>
+                        <button type="button" onclick="insertCommand('\\pm')">±</button>
+                        <button type="button" onclick="insertCommand('\\times')">×</button>
+                        <button type="button" onclick="insertCommand('\\div')">÷</button>
+                        <button type="button" onclick="insertCommand('\\leq')">≤</button>
+                        <button type="button" onclick="insertCommand('\\geq')">≥</button>
+                        <button type="button" onclick="insertCommand('\\neq')">≠</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="preview">
+            <h2>プレビュー：</h2>
+            <div id="preview"></div>
+        </div>
+        <form method="POST" onsubmit="return submitForm()">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <input type="hidden" name="latex" id="latex-input">
+            <input type="hidden" name="format" id="format-input" value="svg">
+            <div id="loading" class="loading" style="display: none;">
+                <div class="spinner"></div>
+                <p>処理中...</p>
+            </div>
+        </form>
+
+        <div class="result">
+            <h2>画像を保存：</h2>
+            <div class="download-buttons">
+                <button onclick="downloadImage('svg')" class="download-button">SVG形式で保存</button>
+                <button onclick="downloadImage('png')" class="download-button">PNG形式で保存</button>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        function updatePreview() {
+            const latex = document.getElementById('latex').value;
+            // 各行を個別の数式環境で囲む
+            const lines = latex.split('\n');
+            const formattedLines = lines.map(line => line.trim() ? `\\[${line}\\]` : '<br>');
+            document.getElementById('preview').innerHTML = formattedLines.join('\n');
+            document.getElementById('latex-input').value = latex;
+            
+            // プレビューを更新
+            MathJax.typesetPromise([document.getElementById('preview')]).catch(function (err) {
+                console.log('MathJax error: ' + err.message);
+            });
+        }
+
+        function insertCommand(command) {
+            const textarea = document.getElementById('latex');
+            const start = textarea.selectionStart;
+            const end = textarea.selectionEnd;
+            const text = textarea.value;
+            const before = text.substring(0, start);
+            const after = text.substring(end);
+            
+            // カーソル位置にコマンドを挿入
+            textarea.value = before + command + after;
+            
+            // カーソル位置を更新
+            const newCursorPos = start + command.length;
+            textarea.setSelectionRange(newCursorPos, newCursorPos);
+            
+            // プレビューを更新
+            updatePreview();
+            
+            // テキストエリアにフォーカスを戻す
+            textarea.focus();
+        }
+
+        function handleKeyDown(event) {
+            if (event.key === 'Enter') {
+                event.preventDefault();
+                const textarea = document.getElementById('latex');
+                const start = textarea.selectionStart;
+                const end = textarea.selectionEnd;
+                const text = textarea.value;
+                const before = text.substring(0, start);
+                const after = text.substring(end);
+                
+                // 改行を挿入
+                textarea.value = before + '\n' + after;
+                
+                // カーソル位置を更新
+                const newCursorPos = start + 1;
+                textarea.setSelectionRange(newCursorPos, newCursorPos);
+                
+                // プレビューを更新
+                updatePreview();
+            }
+        }
+
+        function submitForm() {
+            const latex = document.getElementById('latex').value;
+            if (!latex.trim()) {
+                alert('数式を入力してください');
+                return false;
+            }
+            
+            // ローディング表示
+            document.getElementById('loading').style.display = 'flex';
+            document.getElementById('submit-button').disabled = true;
+            
+            return true;
+        }
+
+        function downloadImage(format) {
+            const latex = document.getElementById('latex').value;
+            if (!latex.trim()) {
+                alert('数式を入力してください');
+                return;
+            }
+
+            // ローディング表示
+            const loading = document.getElementById('loading');
+            loading.style.display = 'flex';
+
+            try {
+                // 画像URLを構築
+                let imageUrl;
+                if (format === 'svg') {
+                    imageUrl = `https://latex.codecogs.com/svg.latex?\\dpi{300}\\huge\\color{black} ${encodeURIComponent(latex)}`;
+                } else {
+                    // PNG用のパラメータを追加
+                    imageUrl = `https://latex.codecogs.com/png.latex?\\dpi{1200}\\huge\\color{black} ${encodeURIComponent(latex)}`;
+                }
+
+                console.log('生成URL:', decodeURIComponent(imageUrl)); // デバッグ用
+
+                // 画像をプリロード
+                const img = new Image();
+                img.crossOrigin = 'Anonymous';  // CORS対策
+
+                img.onload = function() {
+                    console.log('画像読み込み成功:', img.width, 'x', img.height); // デバッグ用
+                    
+                    if (img.width === 0 || img.height === 0) {
+                        console.error('画像サイズが無効です');
+                        alert('画像の生成に失敗しました: 無効なサイズ');
+                        loading.style.display = 'none';
+                        return;
+                    }
+
+                    if (format === 'svg') {
+                        // SVGとして直接ダウンロード
+                        fetch(imageUrl)
+                            .then(response => {
+                                if (!response.ok) {
+                                    throw new Error(`HTTP error! status: ${response.status}`);
+                                }
+                                return response.blob();
+                            })
+                            .then(blob => {
+                                if (blob.size === 0) {
+                                    throw new Error('空のファイルが生成されました');
+                                }
+                                const url = window.URL.createObjectURL(blob);
+                                const a = document.createElement('a');
+                                a.href = url;
+                                a.download = 'latex_equation.svg';
+                                document.body.appendChild(a);
+                                a.click();
+                                window.URL.revokeObjectURL(url);
+                                document.body.removeChild(a);
+                                loading.style.display = 'none';
+                            })
+                            .catch(error => {
+                                console.error('SVGダウンロードエラー:', error);
+                                alert(`SVGの生成に失敗しました: ${error.message}`);
+                                loading.style.display = 'none';
+                            });
+                    } else {
+                        try {
+                            // Canvas経由でPNGを生成
+                            const canvas = document.createElement('canvas');
+                            canvas.width = img.width;
+                            canvas.height = img.height;
+                            const ctx = canvas.getContext('2d', { alpha: true });
+                            
+                            // 背景を透明に設定
+                            ctx.clearRect(0, 0, canvas.width, canvas.height);
+                            
+                            // 画像を描画
+                            ctx.drawImage(img, 0, 0);
+                            
+                            // 透過PNGとして保存
+                            canvas.toBlob(blob => {
+                                if (!blob || blob.size === 0) {
+                                    throw new Error('PNG生成に失敗しました');
+                                }
+                                const url = window.URL.createObjectURL(blob);
+                                const a = document.createElement('a');
+                                a.href = url;
+                                a.download = 'latex_equation.png';
+                                document.body.appendChild(a);
+                                a.click();
+                                window.URL.revokeObjectURL(url);
+                                document.body.removeChild(a);
+                                loading.style.display = 'none';
+                            }, 'image/png');
+                        } catch (error) {
+                            console.error('PNG生成エラー:', error);
+                            alert(`PNGの生成に失敗しました: ${error.message}`);
+                            loading.style.display = 'none';
+                        }
+                    }
+                };
+
+                img.onerror = function(error) {
+                    console.error('画像読み込みエラー:', error);
+                    alert('画像の生成に失敗しました: サーバーからの応答エラー');
+                    loading.style.display = 'none';
+                };
+
+                // 画像の読み込みを開始
+                img.src = imageUrl;
+                
+                // タイムアウト処理
+                setTimeout(() => {
+                    if (!img.complete) {
+                        img.src = ''; // 読み込みを中断
+                        console.error('画像読み込みタイムアウト');
+                        alert('画像の生成がタイムアウトしました');
+                        loading.style.display = 'none';
+                    }
+                }, 10000); // 10秒でタイムアウト
+
+            } catch (error) {
+                console.error('予期せぬエラー:', error);
+                alert(`予期せぬエラーが発生しました: ${error.message}`);
+                loading.style.display = 'none';
+            }
+        }
+    </script>
+</body>
+</html> 
